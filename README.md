@@ -1,7 +1,6 @@
 # Rust `tarpaulin` Action
 
 ![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)
-[![Gitter](https://badges.gitter.im/actions-rs/community.svg)](https://gitter.im/actions-rs/community)
 
 This GitHub Action installs and runs [cargo-tarpaulin](https://github.com/xd009642/tarpaulin).
 It can be used to run tests with coverage tracing enabled, and optionally upload the code coverage reports to coveralls or codecov.
@@ -22,13 +21,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           override: true
 
       - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
+        uses: ionosphere-io/rust-actions-tarpaulin@v0.2
         with:
           version: '0.15.0'
           args: '-- --test-threads 1'
@@ -44,8 +43,6 @@ jobs:
           name: code-coverage-report
           path: cobertura.xml
 ```
-
-See [additional recipes here](https://github.com/actions-rs/meta).
 
 ## Inputs
 
