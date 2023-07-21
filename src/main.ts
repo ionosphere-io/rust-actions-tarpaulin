@@ -3,7 +3,7 @@ const os = require('os');
 import * as toolCache from '@actions/tool-cache';
 import * as core from '@actions/core';
 import * as io from '@actions/io';
-import * as rustCore from '@actions-rs/core';
+import * as rustCore from '@ionosphere-io/rust-actions-core';
 
 import getActionInputs from './args';
 import resolveConfig from './config';
@@ -45,7 +45,11 @@ async function main() {
     try {
         await run();
     } catch (error) {
-        core.setFailed(error.message);
+        if (error instanceof Error) {
+            core.setFailed(error.message);
+        } else {
+            core.setFailed(String(error));
+        }
     }
 }
 

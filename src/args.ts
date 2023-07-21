@@ -1,4 +1,4 @@
-import { input } from '@actions-rs/core';
+import { input } from '@ionosphere-io/rust-actions-core';
 import { OutputType } from './config';
 
 export interface ActionInputs {
