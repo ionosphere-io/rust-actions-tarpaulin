@@ -1,6 +1,6 @@
 {
     "name": "@ionosphere-io/rust-actions-tarpaulin",
-    "version": "0.1.3",
+    "version": "0.2.0",
     "private": false,
     "description": "Code coverage report with Tarpaulin",
     "main": "lib/main.js",
