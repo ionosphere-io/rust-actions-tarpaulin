@@ -1,8 +1,6 @@
-import fetch from 'node-fetch';
-import parseArgsStringToArgv from 'string-argv';
+import fetch from "node-fetch";
+import parseArgsStringToArgv from "string-argv";
 import { ActionInputs } from "./args";
-import { Octokit } from 'octokit';
-import { createActionAuth } from '@octokit/auth-action';
 
 export type OutputType = "Json" | "Toml" | "Stdout" | "Xml" | "Html" | "Lcov";
 
@@ -10,28 +8,28 @@ export interface TarpaulinConfig {
     /**
      * Additional command line options.
      */
-    additionalOptions: string[],
+    additionalOptions: string[];
 
     /**
      * The URL to download a tarball of cargo-tarpaulin from.
      */
-    downloadUrl: string,
+    downloadUrl: string;
 
     /**
      * The type of tests to run. If {@code null}, doctests and normal tests
      * will be run.
      */
-    type: string | null,
+    type: string | null;
 
     /**
      * The maximum time a test can be ran without response before a timeout occurs.
      */
-    timeout: string | null,
+    timeout: string | null;
 
     /**
      * Output format of coverage report
      */
-    outType: OutputType,
+    outType: OutputType;
 }
 
 /**
@@ -40,8 +38,19 @@ export interface TarpaulinConfig {
  *
  * @param input The parameters of the action.
  */
-export default async function resolveConfig(input: ActionInputs): Promise<TarpaulinConfig> {
-    const downloadUrl = await getDownloadUrl(input.requestedVersion);
+export default async function resolveConfig(
+    input: ActionInputs,
+): Promise<TarpaulinConfig> {
+    let releaseEndpoint =
+        "https://api.github.com/repos/xd009642/tarpaulin/releases";
+    if (process.env.GITHUB_RELEASE_ENDPOINT) {
+        releaseEndpoint = process.env.GITHUB_RELEASE_ENDPOINT;
+    }
+
+    const downloadUrl = await getDownloadUrl(
+        releaseEndpoint,
+        input.requestedVersion,
+    );
     const type = input.runType ? input.runType : null;
     const timeout = input.timeout ? input.timeout : null;
     const outType = input.outType ? input.outType : "Xml";
@@ -67,31 +76,29 @@ export default async function resolveConfig(input: ActionInputs): Promise<Tarpau
  * @param requestedVersion The Git tag of the tarpaulin revision to get a download URL for. May be any valid Git tag,
  * or a special-cased `latest`.
  */
-async function getDownloadUrl(requestedVersion: string): Promise<string> {
-    const auth = createActionAuth();
-    const creds = await auth();
-    const client = new Octokit({ auth: creds.token });
+async function getDownloadUrl(
+    releaseEndpoint: string,
+    requestedVersion: string,
+): Promise<string> {
+    const releaseInfoUri =
+        requestedVersion === "latest"
+            ? `${releaseEndpoint}/latest`
+            : `${releaseEndpoint}/tags/${requestedVersion}`;
 
-    var url: string | null;
+    const releaseInfoRequest = await fetch(releaseInfoUri);
+    const releaseInfo = await releaseInfoRequest.json();
+    const asset = releaseInfo["assets"].find((asset) => {
+        return (
+            asset["content_type"] === "application/x-gtar" &&
+            asset["browser_download_url"].includes("x86_64-unknown-linux-gnu")
+        );
+    });
 
-    if (requestedVersion == "latest") {
-        let response = await client.rest.repos.getLatestRelease({
-            owner: 'xd009642',
-            repo: 'tarpaulin',
-        });
-        url = response.data.tarball_url;
-    } else {
-        let response = await client.rest.repos.getReleaseByTag({
-            owner: 'xd009642',
-            repo: 'tarpaulin',
-            tag: requestedVersion,
-        });
-        url = response.data.tarball_url;
+    if (!asset) {
+        throw new Error(
+            `Couldn't find a tarpaulin release tarball containing binaries for ${requestedVersion}`,
+        );
     }
 
-    if (url == null) {
-        throw new Error(`Unable to find tarpaulin release tarball for version ${requestedVersion}`);
-    }
-
-    return url;
+    return asset["browser_download_url"];
 }

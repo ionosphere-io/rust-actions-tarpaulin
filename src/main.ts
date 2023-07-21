@@ -1,12 +1,12 @@
-const os = require('os');
+import * as os from "os";
 
-import * as toolCache from '@actions/tool-cache';
-import * as core from '@actions/core';
-import * as io from '@actions/io';
-import * as rustCore from '@ionosphere-io/rust-actions-core';
+import * as toolCache from "@actions/tool-cache";
+import * as core from "@actions/core";
+import * as io from "@actions/io";
+import * as rustCore from "@ionosphere-io/rust-actions-core";
 
-import getActionInputs from './args';
-import resolveConfig from './config';
+import getActionInputs from "./args";
+import resolveConfig from "./config";
 
 async function run() {
     /* Make sure cargo is available before we do anything */
@@ -18,8 +18,12 @@ async function run() {
     const outputDir = `${os.tmpdir()}/tarpaulin`;
     await io.mkdirP(outputDir);
 
-    core.info(`[tarpaulin] downloading cargo-tarpaulin from ${config.downloadUrl}`);
-    const tarpaulinTarballPath = await toolCache.downloadTool(config.downloadUrl);
+    core.info(
+        `[tarpaulin] downloading cargo-tarpaulin from ${config.downloadUrl}`,
+    );
+    const tarpaulinTarballPath = await toolCache.downloadTool(
+        config.downloadUrl,
+    );
     const tarpaulinBinPath = await toolCache.extractTar(tarpaulinTarballPath);
 
     core.addPath(tarpaulinBinPath);
@@ -27,12 +31,12 @@ async function run() {
     let args = ["tarpaulin", "--out", config.outType];
     const additionalArgs = config.additionalOptions;
 
-    if (!additionalArgs.includes('--run-types') && config.type !== null) {
-        args.push('--run-types', config.type);
+    if (!additionalArgs.includes("--run-types") && config.type !== null) {
+        args.push("--run-types", config.type);
     }
 
-    if (!additionalArgs.includes('--timeout') && config.timeout !== null) {
-        args.push('--timeout', config.timeout);
+    if (!additionalArgs.includes("--timeout") && config.timeout !== null) {
+        args.push("--timeout", config.timeout);
     }
 
     args = args.concat(additionalArgs);
